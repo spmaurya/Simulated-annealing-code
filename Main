@@ -1,0 +1,49 @@
+%% Main code save this matlab file as 'Main_SA'
+clc; clear; close all;
+for i=1:1
+Seismic = read_segy_file('blackfoot_seismic.sgy',{'times',600,800},{'traces',2106:1:2185});
+global one_composite_trace Model_composite Wavelet
+one_composite_trace = Seismic.traces(:,i);
+Model = read_segy_file('Model_Zp_P-Impedance.sgy',{'times',100,300},{'traces',2106:1:2185});
+Model_composite = Model.traces(:,i);
+%wavelet = read_segy_file('I:\Journals\Springer_seismic_inversion_book_chapter\Figures\Global_optimization\Genetic_algorithm\Real_data_example\statistical_wavelet.sgy');
+wavelet = read_segy_file('statistical_wavelet.sgy');
+%wavelet = read_segy_file('wavelet_use_wells_08_08.sgy');
+Wavelet = wavelet.traces';
+Generations_Data = 1500;
+st = Model_composite;
+nvars = 101;
+LB = Model_composite-1500;   % Lower bound
+UB = Model_composite+1500;   % Upper bound
+
+MaxIter_Data = 100;
+ReannealInterval_Data = 1500;
+options = saoptimset;
+
+options = saoptimset(options,'MaxIter', MaxIter_Data);
+options = saoptimset(options,'Display', 'iter');
+options = saoptimset(options,'InitialTemperature', 3000);
+options = saoptimset(options,'TemperatureFcn', @temperaturefast);
+options = saoptimset(options,'HybridInterval', 'end');
+options = saoptimset(options,'plotfcn',{@saplotbestf, @optimplotfval,@saplottemperature,@saplotf,@saplotstopping});
+options = saoptimset(options,'ReannealInterval', ReannealInterval_Data);
+options = saoptimset(options,'HybridFcn',@FMINCON);
+[x,fval] = simulannealbnd(@Global_optimization_SA,st,LB,UB,options);
+AI_inverted(:, i) = x;
+save SA_traces_1_50_test.txt AI_inverted -ascii
+Trace_no = i+1
+end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
