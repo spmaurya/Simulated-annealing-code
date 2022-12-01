@@ -1,0 +1,1023 @@
+%% Code to plot inverted results
+clc; clear; close all;
+% Seismic plot
+seismic_plot = read_segy_file('blackfoot_seismic.sgy',{'times',600,800},{'traces',2107:1:2156}); % Use your seismic data here
+seismic_plot.first = 900;
+seismic_plot.last = 1100;
+myGmap = xlsread('myGmap.xlsx'); % Use your color bar
+myGmap = myGmap./255;
+s_wplot(seismic_plot)
+set(findobj(gcf,'type','axes'),'FontName','Times New Roman','FontSize',11,'FontWeight','Normal', 'LineWidth', 0.80);
+ 
+s_cplot(seismic_plot,{'colormap',myGmap},{'shading','interp'})
+set(findobj(gcf,'type','axes'),'FontName','Times New Roman','FontSize',11,'FontWeight','Normal', 'LineWidth', 0.80);
+ 
+ 
+% Impedance plot with well log 08-08_logs
+seismic = read_segy_file('Model_P_Impedance_entire_data_P-Impedance.sgy',{'times',300,800},{'traces',2107:1:2156}); % Use your model here
+Inverted_AI_1_2823 =  load('E:\Matlab_Code_Optimization\Matlab_plots\SA\SA_real\inverted_impedance_3D_08_08_2022.txt'); % change this line
+Inverted_AI_1_50 = Inverted_AI_1_2823(1:101, 2107:2156);
+zero_50_150 = zeros(150,50);
+Inverted_AI_250_50 = [Inverted_AI_1_50; zero_50_150];
+seismic.traces = Inverted_AI_250_50;
+seismic.first =900;
+seismic.last = 1400;
+load('C:\Users\DELL\Documents\MATLAB\Well_data\08-08_logs.mat');
+aimp = (wlog_08_08.curves(:,2).*wlog_08_08.curves(:,3));
+wlog_08_08 = l_curve_math(wlog_08_08,'add','aimp = rhob.*dt','m/s*g/cc','Acoustic Impedance');
+wlog_08_08=l_select(wlog_08_08,{'curves','aimp'});
+step=2;      % Sample interval in ms of the depth-to-time converted well log
+wlog_08_08=l_resample(wlog_08_08,step);
+tlog=s_log2seismic(wlog_08_08);
+tlog=s_select(tlog,{'times',seismic.first,seismic.last},{'null',NaN});
+tlog=tlog-nan_mean(tlog.traces);
+slog=s_resample(seismic,step);
+slog.traces(1:end,1:end)=NaN;
+Seismic=s_data;
+Seismic.traces = seismic.traces;
+Seismic.first = 900;
+Seismic.last = 1400;
+Seismic.step = 2;
+for i=1:50
+AA(i) = 2106+i;
+end
+Seismic.headers = AA;
+loc=s_trace_numbers(Seismic,'CDP',2142); % Find the trace number with CDP == 107
+slog.traces(:,loc)=tlog.traces;
+s_cplot(Seismic,{'colormap',myGmap},{'shading','interp'}
+AI_Model = read_segy_file('Model_P_Impedance_entire_data_P-Impedance.sgy',{'times',600,800},{'traces',2107:1:2156});
+AI_Model_101_50 = AI_Model.traces;
+AI_Model_251_50 = [AI_Model_101_50; zero_50_150];
+Seismic.traces = (Seismic.traces./2)+(AI_Model_251_50./2);
+slog.name = 'Seismic with well 08-08_logs';
+s_cplot(Seismic,{'colormap',myGmap},{'shading','interp'},{'annotation','cdp'})    % Plot the seismic as a color image
+s_wplot(slog,{'figure','old'},{'wiggle','blue'},{'peak_fill',''}, ...
+   {'interp','linear'},{'wiggle_width',1.5},{'annotation','CDP'}, ...
+   {'deflection',1})
+ylim([900 1100])
+caxis([9000, 12000])
+set(findobj(gcf,'type','axes'),'FontName','Times New Roman','FontSize',11,'FontWeight','Normal', 'LineWidth', 0.80);
+ 
+ 
+% Impedance plot with well log 01-08_logs
+seismic = read_segy_file('Model_P_Impedance_entire_data_P-Impedance.sgy',{'times',300,800},{'traces',1:1:50});
+Inverted_AI_1_2823 =  load('E:\Matlab_Code_Optimization\Matlab_plots\SA\SA_real\inverted_impedance_3D_08_08_2022.txt'); % change this line
+Inverted_AI_1_50 = Inverted_AI_1_2823(1:101, 1:50);
+zero_50_150 = zeros(150,50);
+Inverted_AI_250_50 = [Inverted_AI_1_50; zero_50_150];
+seismic.traces = Inverted_AI_250_50;
+seismic.first =900;
+seismic.last = 1400;
+wlog_01_08 = read_las_file('C:\Users\DELL\Documents\MATLAB\Well_data\01-08_logs.las');
+wlog_01_08 = l_curve_math(wlog_01_08,'add','aimp = rhob.*dt','m/s*g/cc','Acoustic Impedance');
+wlog_01_08=l_rename(wlog_01_08,{'dptm','twt'});
+wlog_01_08=l_rm_nulls(wlog_01_08,'anywhere','twt');
+     Make two-way time the first column
+wlog_01_08=l_switch_depth(wlog_01_08,'twt');
+    Select the desired curve (density); remove all others
+wlog_01_08=l_select(wlog_01_08,{'curves','aimp'});
+step=2;      % Sample interval in ms of the depth-to-time converted well log
+wlog_01_08=l_resample(wlog_01_08,step);
+tlog=s_log2seismic(wlog_01_08);
+tlog=s_select(tlog,{'times',seismic.first,seismic.last},{'null',NaN});
+tlog=tlog-nan_mean(tlog.traces);
+slog=s_resample(seismic,step);
+slog.traces(1:end,1:end)=NaN;
+Seismic=s_data;
+Seismic.traces = seismic.traces;
+Seismic.first = 900;
+Seismic.last = 1400;
+Seismic.step = 2;
+for i=1:50
+AA(i) = i;
+end
+Seismic.headers = AA;
+loc=s_trace_numbers(Seismic,'CDP',42); % Find the trace number with CDP == 107
+slog.traces(:,loc)=tlog.traces;
+s_cplot(Seismic,{'colormap',myGmap},{'shading','interp'}
+AI_Model = read_segy_file('Model_P_Impedance_entire_data_P-Impedance.sgy',{'times',600,800},{'traces',1:1:50});
+AI_Model_101_50 = AI_Model.traces;
+AI_Model_251_50 = [AI_Model_101_50; zero_50_150];
+Seismic.traces = (Seismic.traces./2)+(AI_Model_251_50./2);
+slog.name = 'Seismic with well 01-08_logs';
+s_cplot(Seismic,{'colormap',myGmap},{'shading','interp'},{'annotation','cdp'})    % Plot the seismic as a color image
+s_wplot(slog,{'figure','old'},{'wiggle','blue'},{'peak_fill',''}, ...
+   {'interp','linear'},{'wiggle_width',1.5},{'annotation','CDP'}, ...
+   {'deflection',1})
+ylim([900 1100])
+caxis([9250, 12000])
+set(findobj(gcf,'type','axes'),'FontName','Times New Roman','FontSize',11,'FontWeight','Normal', 'LineWidth', 0.80);
+ 
+ 
+% Impedance plot with well log 09-08_logs and 11-08_logs
+seismic = read_segy_file('Model_P_Impedance_entire_data_P-Impedance.sgy',{'times',300,800},{'traces',3089:1:3138});
+Inverted_AI_2824_3220 =  load('E:\Matlab_Code_Optimization\Matlab_plots\SA\SA_real\inverted_impedance_3D_08_08_2022.txt'); % change this line
+Inverted_AI_1_50 = Inverted_AI_2824_3220(1:101, 3089:1:3138);
+zero_50_150 = zeros(150,50);
+Inverted_AI_250_50 = [Inverted_AI_1_50; zero_50_150];
+seismic.traces = Inverted_AI_250_50;
+seismic.first =900;
+seismic.last = 1400;
+wlog_09_08 = read_las_file('C:\Users\DELL\Documents\MATLAB\Well_data\09-08_logs.las');
+wlog_09_08 = l_curve_math(wlog_09_08,'add','aimp = rhob.*dt','m/s*g/cc','Acoustic Impedance');
+wlog_09_08=l_rename(wlog_09_08,{'dptm','twt'});
+wlog_09_08=l_rm_nulls(wlog_09_08,'anywhere','twt');
+     Make two-way time the first column
+wlog_09_08=l_switch_depth(wlog_09_08,'twt');
+    Select the desired curve (density); remove all others
+wlog_09_08=l_select(wlog_09_08,{'curves','aimp'});
+step=2;      % Sample interval in ms of the depth-to-time converted well log
+wlog_09_08=l_resample(wlog_09_08,step);
+tlog=s_log2seismic(wlog_09_08);
+tlog=s_select(tlog,{'times',seismic.first,seismic.last},{'null',NaN});
+tlog=tlog-nan_mean(tlog.traces);
+slog=s_resample(seismic,step);
+slog.traces(1:end,1:end)=NaN;
+Seismic=s_data;
+Seismic.traces = seismic.traces;
+Seismic.first = 900;
+Seismic.last = 1400;
+Seismic.step = 2;
+for i=1:50
+AA(i) = 3088+i;
+end
+Seismic.headers = AA;
+loc=s_trace_numbers(Seismic,'CDP',3132); % Find the trace number with CDP == 107
+slog.traces(:,loc)=tlog.traces;
+AI_Model = read_segy_file('Model_P_Impedance_entire_data_P-Impedance.sgy',{'times',600,800},{'traces',3089:1:3138});
+AI_Model_101_50 = AI_Model.traces;
+AI_Model_251_50 = [AI_Model_101_50; zero_50_150];
+Seismic.traces = (Seismic.traces./2)+(AI_Model_251_50./2);
+slog.name = 'Seismic with well 09-08_logs';
+s_cplot(Seismic,{'colormap',myGmap},{'shading','interp'},{'annotation','cdp'})    % Plot the seismic as a color image
+s_wplot(slog,{'figure','old'},{'wiggle','blue'},{'peak_fill',''}, ...
+   {'interp','linear'},{'wiggle_width',1.5},{'annotation','CDP'}, ...
+   {'deflection',1})
+hold on
+reading well 11-08_logs
+wlog_11_08 = read_las_file('C:\Users\DELL\Documents\MATLAB\Well_data\11-08_logs.las');
+wlog_11_08 = l_curve_math(wlog_11_08,'add','aimp = rhob.*dt','m/s*g/cc','Acoustic Impedance');
+wlog_11_08=l_rename(wlog_11_08,{'dptm','twt'});
+wlog_11_08=l_rm_nulls(wlog_11_08,'anywhere','twt');
+     Make two-way time the first column
+wlog_11_08=l_switch_depth(wlog_11_08,'twt');
+    Select the desired curve (density); remove all others
+wlog_11_08=l_select(wlog_11_08,{'curves','aimp'});
+step=2;      % Sample interval in ms of the depth-to-time converted well log
+wlog_11_08=l_resample(wlog_11_08,step);
+tlog=s_log2seismic(wlog_11_08);
+tlog=s_select(tlog,{'times',seismic.first,seismic.last},{'null',NaN});
+tlog=tlog-nan_mean(tlog.traces);
+slog=s_resample(seismic,step);
+slog.traces(1:end,1:end)=NaN;
+loc=s_trace_numbers(Seismic,'CDP',3136); % Find the trace number with CDP == 107
+slog.traces(:,loc)=tlog.traces;
+slog.name = 'Seismic with well 09-08_logs & 11-08_logs';
+s_wplot(slog,{'figure','old'},{'wiggle','blue'},{'peak_fill',''}, ...
+   {'interp','linear'},{'wiggle_width',1.5},{'annotation','CDP'}, ...
+   {'deflection',1})
+ylim([900 1100])
+caxis([9300, 12000])
+set(findobj(gcf,'type','axes'),'FontName','Times New Roman','FontSize',11,'FontWeight','Normal', 'LineWidth', 0.80);
+ 
+ 
+% Plot inverted seismic data
+clc; clear; close all;
+wavelet = read_segy_file('wavelet_use_wells_08_08.sgy');
+seismic_plot = read_segy_file('blackfoot_seismic.sgy',{'times',600,800},{'traces',1:1:50});
+seismic_plot.first = 900;
+seismic_plot.last = 1100;
+Inverted_AI_2824_3220 =  load('E:\Matlab_Code_Optimization\Matlab_plots\SA\SA_real\inverted_impedance_3D_08_08_2022.txt'); % change this line
+Inverted_AI_1_50 = Inverted_AI_2824_3220(1:101, 1:1:50);
+ 
+for i=1:50
+    for j=1:100
+        refl(j,i) = (Inverted_AI_1_50(j+1,i)-Inverted_AI_1_50(j,i))/(Inverted_AI_1_50(j+1,i)+Inverted_AI_1_50(j,i));
+    end
+end
+refl = [refl; zeros(1, 50)];
+for i=1:50
+    synthetic_101_50(:,i) = conv(refl(:,i), wavelet.traces(:,1),'same');
+end
+seismic_new = seismic_plot;
+seismic_new.traces = synthetic_101_50;
+seismic_new.name = 'Inverted synthetic';
+s_wplot(seismic_new)
+seismic_plot.name = 'Blackfoot seismic';
+auxp1 = s_wplot(seismic_plot);
+subplot(1,2,1)
+seismic_new.traces.*3;
+auxp = s_compare(seismic_new,seismic_plot,{'figure','old'});
+for i=1:50
+    correlation_101_50 =corrcoef(seismic_plot.traces(:,i), seismic_new.traces(:,i));
+    correlation(1,i) = correlation_101_50(2);
+end
+avg_cc = mean(abs(correlation));
+Difference = seismic_plot.traces-seismic_new.traces;
+seismic_new.traces = Difference.*0.5;
+text(min(xlim)+10, max(ylim)+13, sprintf('Average Correlation = 0.67'),'FontSize',13)
+subplot(1,2,2)
+seismic_new.name = 'Difference';
+s_wplot(seismic_new,{'figure','old'},{'scale',auxp.scale1})
+ 
+ corrcoef(seismic_plot.traces, seismic_new.traces)
+ 
+% Single trace analysis for well 08-08_logs
+Inverted_AI_1_2823 =  load('E:\Matlab_Code_Optimization\Matlab_plots\SA\SA_real\inverted_impedance_3D_08_08_2022.txt');
+Inverted_AI_2142 = Inverted_AI_1_2823(1:101, 2148:2148);
+wlog = read_las_file('08-08_logs.las');
+Time = linspace(900,1100,101)';
+AI_Model_2142 = read_segy_file('Model_Zp_P-Impedance.sgy',{'times',100,300},{'traces',2148:1:2148});
+figure;
+subplot(1,2,2)
+plot(AI_Model_2142.traces, Time,'k')
+set(findobj(gcf,'type','axes'),'FontName','Times New Roman','FontSize',11,'FontWeight','Normal', 'LineWidth', 0.80);
+set(gca,'YDir','reverse')
+set(gca,'XAxisLocation','top')
+hold on
+Aimp_2142 = (wlog.curves(1200:1438,2).*wlog.curves(1200:1438,6));
+plot(Aimp_2142,wlog.curves(1200:1438,3),'b')
+hold on
+plot(Inverted_AI_2142, Time,'r','LineWidth',1.0)
+ylim([900 1100])
+hold on
+plot(AI_Model_2142.traces-2000, Time,':k', 'LineWidth', 1)
+hold on
+plot(AI_Model_2142.traces+2000, Time,':k', 'LineWidth', 1)
+ylabel('Time (ms)')
+xlabel('Impedance')
+legend('Model', 'Well log','Inverted')
+set(findobj(gcf,'type','axes'),'FontName','Times New Roman','FontSize',11,'FontWeight','Normal', 'LineWidth', 0.80);
+set(gca,'YDir','reverse')
+set(gca,'XAxisLocation','top')
+grid on
+grid minor
+subplot(1,2,1)
+Seismic = read_segy_file('blackfoot_seismic.sgy',{'times',600,800},{'traces',2107:1:2156});
+Seismic.first = 900;
+Seismic.last = 1100;
+for i=1:50
+AA(i) = 2106+i;
+end
+Seismic.headers = AA;
+temp=Seismic;
+bool=false(1,50);                % The seismic dataset has 12 traces
+bool([22])=true;
+temp.traces(:,bool)=NaN;         % Set traces 5 and 7 to NaN
+temp.null=NaN;                   % Dataset has null values (this is only done to avoid warnings)
+s_wplot(temp,{'deflection',1},{'figure','old'})   % Plot the datset
+hold on
+temp=Seismic;
+temp.traces(:,~bool)=NaN;        % Set all traces except 5 and 7 to NaN
+temp.null=NaN;                   % Dataset has null values (this is only done to avoid warnings)
+s_wplot(temp,{'deflection',1},{'wiggle_color','blue'},{'peak_fill','blue'},{'figure','old'})  
+set(findobj(gcf,'type','axes'),'FontName','Times New Roman','FontSize',11,'FontWeight','Normal', 'LineWidth', 0.80);
+ 
+ 
+ 
+% Single trace analysis for well 01_08_logs
+Inverted_AI_1_2823 =  load('E:\Matlab_Code_Optimization\Matlab_plots\SA\SA_real\inverted_impedance_3D_08_08_2022.txt');
+Inverted_AI_2142 = Inverted_AI_1_2823(1:101, 42:42);
+wlog = read_las_file('C:\Users\DELL\Documents\MATLAB\Well_data\01-08_logs.las');
+Time = linspace(900,1100,101)';
+AI_Model_2142 = read_segy_file('Model_Zp_P-Impedance.sgy',{'times',100,300},{'traces',42:1:42});
+figure;
+subplot(1,2,2)
+plot(AI_Model_2142.traces, Time,'k')
+set(findobj(gcf,'type','axes'),'FontName','Times New Roman','FontSize',11,'FontWeight','Normal', 'LineWidth', 0.80);
+set(gca,'YDir','reverse')
+set(gca,'XAxisLocation','top')
+hold on
+Aimp_2142 = (wlog.curves(1054:1434,2).*wlog.curves(1054:1434,3));
+plot(Aimp_2142,wlog.curves(1054:1434,4),'b')
+hold on
+plot(Inverted_AI_2142, Time,'r','LineWidth',1.0)
+ylim([900 1100])
+hold on
+plot(AI_Model_2142.traces-2000, Time,':k', 'LineWidth', 1)
+hold on
+plot(AI_Model_2142.traces+2000, Time,':k', 'LineWidth', 1)
+ylabel('Time (ms)')
+xlabel('Impedance')
+legend('Model', 'Well log','Inverted')
+set(findobj(gcf,'type','axes'),'FontName','Times New Roman','FontSize',11,'FontWeight','Normal', 'LineWidth', 0.80);
+set(gca,'YDir','reverse')
+set(gca,'XAxisLocation','top')
+grid on
+grid minor
+subplot(1,2,1)
+Seismic = read_segy_file('blackfoot_seismic.sgy',{'times',600,800},{'traces',1:1:50});
+Seismic.first = 900;
+Seismic.last = 1100;
+for i=1:50
+AA(i) = i;
+end
+Seismic.headers = AA;
+temp=Seismic;
+bool=false(1,50);                % The seismic dataset has 12 traces
+bool([22])=true;
+temp.traces(:,bool)=NaN;         % Set traces 5 and 7 to NaN
+temp.null=NaN;                   % Dataset has null values (this is only done to avoid warnings)
+s_wplot(temp,{'deflection',1},{'figure','old'})   % Plot the datset
+hold on
+temp=Seismic;
+temp.traces(:,~bool)=NaN;        % Set all traces except 5 and 7 to NaN
+temp.null=NaN;                   % Dataset has null values (this is only done to avoid warnings)
+s_wplot(temp,{'deflection',1},{'wiggle_color','blue'},{'peak_fill','blue'},{'figure','old'})  
+set(findobj(gcf,'type','axes'),'FontName','Times New Roman','FontSize',11,'FontWeight','Normal', 'LineWidth', 0.80);
+ 
+ 
+ 
+% Plots all 4 logs 01-08, 08-08, 09-08 and 11-08
+load('C:\Users\DELL\Documents\MATLAB\Well_data\08-08_logs.mat');
+wlog_01_08 = read_las_file('C:\Users\DELL\Documents\MATLAB\Well_data\01-08_logs.las');
+wlog_09_08 = read_las_file('C:\Users\DELL\Documents\MATLAB\Well_data\09-08_logs.las');
+wlog_11_08 = read_las_file('C:\Users\DELL\Documents\MATLAB\Well_data\11-08_logs.las');
+wlog_08_08_updated = read_las_file('C:\Users\DELL\Documents\MATLAB\Well_data\08-08_logs.las');
+Vp_08_08_updated = wlog_08_08_updated.curves(1200:1454, 2);
+Vp_01_08 =  wlog_01_08.curves(:,3);
+Vp_08_08 =  wlog_08_08.curves(:,3);
+Vp_09_08 =  wlog_09_08.curves(:,3);
+Vp_11_08 =  wlog_11_08.curves(:,2);
+ 
+rho_01_08 =  wlog_01_08.curves(:,2);
+rho_08_08 =  wlog_08_08.curves(:,2);
+rho_09_08 =  wlog_09_08.curves(:,2);
+rho_11_08 =  wlog_11_08.curves(:,3);
+rho_08_08_updated = wlog_08_08_updated.curves(1200:1454, 3);
+ 
+twt_01_08 =  wlog_01_08.curves(:,4);
+twt_08_08 =  wlog_08_08.curves(:,1);
+twt_09_08 =  wlog_09_08.curves(:,4);
+twt_11_08 =  wlog_11_08.curves(:,4);
+twt_08_08_updated = linspace(981,1100, 255);
+ 
+figure;
+subplot(1,4,1)
+plot(Vp_01_08.*rho_01_08, twt_01_08,'b');
+xlabel({'AI (m/s*g/cc)';'(well 01-08)'});
+ylabel('Time (ms)');
+set(findobj(gcf,'type','axes'),'FontName','Times New Roman','FontSize',11,'FontWeight','Normal', 'LineWidth', 0.80);
+set(gca,'YDir','reverse');
+set(gca,'XAxisLocation','top');
+ylim([900 1100])
+xlim([6000 12000])
+hold on
+ 
+subplot(1,4,2)
+plot(Vp_08_08_updated.*rho_08_08_updated, twt_08_08_updated,'b');
+xlabel({'AI (m/s*g/cc)';'(well 08-08)'})
+ylabel('Time (ms)')
+set(findobj(gcf,'type','axes'),'FontName','Times New Roman','FontSize',11,'FontWeight','Normal', 'LineWidth', 0.80);
+set(gca,'YDir','reverse')
+set(gca,'XAxisLocation','top')
+ylim([900 1100])
+xlim([6000 12000])
+hold on
+ 
+subplot(1,4,3)
+plot(Vp_09_08.*rho_09_08, twt_09_08,'b')
+xlabel({'AI (m/s*g/cc)';'(well 09-08)'})
+ylabel('Time (ms)')
+set(findobj(gcf,'type','axes'),'FontName','Times New Roman','FontSize',11,'FontWeight','Normal', 'LineWidth', 0.80);
+set(gca,'YDir','reverse')
+set(gca,'XAxisLocation','top')
+ylim([900 1100])
+xlim([6000 12000])
+hold on
+ 
+subplot(1,4,4)
+plot(Vp_11_08.*rho_11_08, twt_11_08,'b')
+xlabel({'AI (m/s*g/cc)';'(well 11-08)'})
+ylabel('Time (ms)')
+set(findobj(gcf,'type','axes'),'FontName','Times New Roman','FontSize',11,'FontWeight','Normal', 'LineWidth', 0.80);
+set(gca,'YDir','reverse')
+set(gca,'XAxisLocation','top')
+ylim([900 1100])
+xlim([6000 12000])
+ 
+crossplots
+figure;
+sz = 35;
+subplot(2,2,1)
+scatter(Vp_01_08(1054:1452).*rho_01_08(1054:1452), rho_01_08(1054:1452), sz,twt_01_08(1054:1452),'filled')
+scatter(Vp_01_08(1054:1452).*rho_01_08(1054:1452), rho_01_08(1054:1452), sz,'filled','MarkerEdgeColor','k','MarkerFaceColor','b','LineWidth',1.0)
+hcb = colorbar
+colormap jet
+xlabel('Impedance (m/s*g/cc)')
+ylabel('Density (g/cc)')
+set(findobj(gcf,'type','axes'),'FontName','Times New Roman','FontSize',11,'FontWeight','Normal', 'LineWidth', 0.80);
+grid on
+grid minor
+colorTitleHandle = get(hcb,'Title');
+titleString = 'TWT (ms)';
+set(colorTitleHandle ,'String',titleString);
+set(findobj(gcf,'type','axes'),'FontName','Times New Roman','FontSize',11,'FontWeight','Normal', 'LineWidth', 0.80);
+ 
+ 
+subplot(2,2,2)
+scatter(Vp_08_08(536:716).*rho_08_08(536:716), rho_08_08(536:716), sz,twt_08_08(536:716),'filled')
+scatter(Vp_08_08(536:716).*rho_08_08(536:716), rho_08_08(536:716), sz,'filled','MarkerEdgeColor','k','MarkerFaceColor','b','LineWidth',1.0)
+hcb = colorbar
+colormap jet
+xlabel('Impedance (m/s*g/cc)')
+ylabel('Density (g/cc)')
+set(findobj(gcf,'type','axes'),'FontName','Times New Roman','FontSize',11,'FontWeight','Normal', 'LineWidth', 0.80);
+grid on
+grid minor
+colorTitleHandle = get(hcb,'Title');
+titleString = 'TWT (ms)';
+set(colorTitleHandle ,'String',titleString);
+set(findobj(gcf,'type','axes'),'FontName','Times New Roman','FontSize',11,'FontWeight','Normal', 'LineWidth', 0.80);
+ 
+subplot(2,2,3)
+scatter(Vp_09_08(1015:1373).*rho_09_08(1015:1373), rho_09_08(1015:1373), sz,twt_09_08(1015:1373),'filled')
+scatter(Vp_09_08(1015:1373).*rho_09_08(1015:1373), rho_09_08(1015:1373), sz,'filled','MarkerEdgeColor','k','MarkerFaceColor','b','LineWidth',1.0)
+ 
+hcb = colorbar
+colormap jet
+xlabel('Impedance (m/s*g/cc)')
+ylabel('Density (g/cc)')
+grid on
+grid minor
+colorTitleHandle = get(hcb,'Title');
+titleString = 'TWT (ms)';
+set(colorTitleHandle ,'String',titleString);
+set(findobj(gcf,'type','axes'),'FontName','Times New Roman','FontSize',11,'FontWeight','Normal', 'LineWidth', 0.80);
+ 
+subplot(2,2,4)
+scatter(Vp_11_08(1038:1415).*rho_11_08(1038:1415), rho_11_08(1038:1415), sz,twt_11_08(1038:1415),'filled')
+scatter(Vp_11_08(1038:1415).*rho_11_08(1038:1415), rho_11_08(1038:1415), sz,'filled','MarkerEdgeColor','k','MarkerFaceColor','b','LineWidth',1.0)
+ 
+hcb = colorbar
+colormap jet
+xlabel('Impedance (m/s*g/cc)')
+ylabel('Density (g/cc)')
+grid on
+grid minor
+colorTitleHandle = get(hcb,'Title');
+titleString = 'TWT (ms)';
+set(colorTitleHandle ,'String',titleString);
+set(findobj(gcf,'type','axes'),'FontName','Times New Roman','FontSize',11,'FontWeight','Normal', 'LineWidth', 0.80);
+ 
+ 
+%% 3D Inverted Impedance plot
+ 
+Inverted_AI_1_2823 =  load('E:\Matlab_Code_Optimization\Matlab_plots\SA\SA_real\inverted_impedance_3D_08_08_2022.txt');
+%load('data3d.mat');
+%seismic.traces = Inverted_AI_1_3240;
+k=0;
+for i = 1:81
+    for j=1:40
+    inline_no(i+j-1+k) = i;
+    end
+    k=k+39;
+end
+ 
+k=0;
+for i = 1:81
+    for j=1:40
+    crosslinbe_no(i+j-1+k) = j;
+    end
+    k=k+39;
+end
+% seismic=s_data3d;
+% zero_50_150 = zeros(150,3240);
+% Inverted_AI_1_3240 = [Inverted_AI_1_3240; zero_50_150];
+% seismic.traces = Inverted_AI_1_3240;
+load('seismic_GA_inverted_results.mat')
+seismic_GA_inverted_results.traces = Inverted_AI_1_2823(:,1:3240);
+seismic_GA_inverted_results.first = 900;
+seismic_GA_inverted_results.last = 1400;
+seismic_GA_inverted_results.step = 2;
+s_volume_browser(seismic_GA_inverted_results,{'headers','iline_no','xline_no'},{'times',900,1100})
+ 
+% Error plot
+fileID = fopen('E:\Matlab_Code_Optimization\Matlab_plots\SA\SA_real\SA_iteration_3D_08_08_2022.txt','r');
+formatSpec = '%d %d %f %f %f';
+sizeA = [5 Inf];
+Iterations_1_2823 = fscanf(fileID,formatSpec,sizeA);
+Iterations_1_2823 = Iterations_1_2823';
+k=0;
+for i=1:150
+    for j=1:401
+        Iteration(i,j) = Iterations_1_2823(j+k,1);
+        best_fx(i,j) = Iterations_1_2823(j+k,3);
+        mean_fx(i,j) = Iterations_1_2823(j+k,4);
+    end
+    k=k+401;
+end
+Iteration = Iteration';
+best_fx = best_fx';
+mean_fx = mean_fx';
+ 
+figure;
+for i=1:150
+    plot(Iteration(:,i), mean_fx(:,i),':k')
+    hold on
+end
+BB = mean(mean_fx');
+BB = BB';
+hold on
+plot(Iteration(:,1), BB,'r','LineWidth',1.2)
+title('Variation of mean f(x) with iterations')
+xlabel('Iterations')
+ylabel('Error')
+grid on
+grid minor
+set(findobj(gcf,'type','axes'),'FontName','Times New Roman','FontSize',11,'FontWeight','Normal', 'LineWidth', 0.80);
+ 
+ 
+figure;
+for i=1:150
+    plot(Iteration(:,i), best_fx(:,i),':k')
+    hold on
+end
+ 
+AA = mean(best_fx');
+AA = AA';
+hold on
+plot(Iteration(:,1), AA,'r','LineWidth',1.2)
+title('Variation of best f(x) with iterations')
+xlabel('Iterations')
+ylabel('Error')
+set(findobj(gcf,'type','axes'),'FontName','Times New Roman','FontSize',11,'FontWeight','Normal', 'LineWidth', 1.5);
+grid on
+grid minor
+ 
+Error plot with multiple subplots for trace 1-24
+figure;
+subplot(5,5,1)
+plot(Iteration(:,1), best_fx(:,1),'b')
+xlabel('Iterations')
+ylabel('Error')
+title('\it Trace 1')
+set(findobj(gcf,'type','axes'),'FontName','Times New Roman','FontSize',11,'FontWeight','Normal', 'LineWidth', 1.5);
+grid on
+ 
+subplot(5,5,2)
+plot(Iteration(:,2), best_fx(:,2),'b')
+xlabel('Iterations')
+ylabel('Error')
+title('\it Trace 2')
+set(findobj(gcf,'type','axes'),'FontName','Times New Roman','FontSize',11,'FontWeight','Normal', 'LineWidth', 1.5);
+grid on
+ 
+ 
+subplot(5,5,3)
+plot(Iteration(:,3), best_fx(:,3),'b')
+xlabel('Iterations')
+ylabel('Error')
+title('\it Trace 3')
+set(findobj(gcf,'type','axes'),'FontName','Times New Roman','FontSize',11,'FontWeight','Normal', 'LineWidth', 1.5);
+grid on
+ 
+ 
+subplot(5,5,4)
+plot(Iteration(:,4), best_fx(:,4),'b')
+xlabel('Iterations')
+ylabel('Error')
+title('\it Trace 4')
+set(findobj(gcf,'type','axes'),'FontName','Times New Roman','FontSize',11,'FontWeight','Normal', 'LineWidth', 1.5);
+grid on
+ 
+ 
+subplot(5,5,5)
+plot(Iteration(:,5), best_fx(:,5),'b')
+xlabel('Iterations')
+ylabel('Error')
+title('\it Trace 5')
+set(findobj(gcf,'type','axes'),'FontName','Times New Roman','FontSize',11,'FontWeight','Normal', 'LineWidth', 1.5);
+grid on
+ 
+ 
+subplot(5,5,6)
+plot(Iteration(:,6), best_fx(:,6),'b')
+xlabel('Iterations')
+ylabel('Error')
+title('\it Trace 6')
+set(findobj(gcf,'type','axes'),'FontName','Times New Roman','FontSize',11,'FontWeight','Normal', 'LineWidth', 1.5);
+grid on
+ 
+ 
+subplot(5,5,7)
+plot(Iteration(:,26), best_fx(:,26),'b')
+xlabel('Iterations')
+ylabel('Error')
+title('\it Trace 7')
+set(findobj(gcf,'type','axes'),'FontName','Times New Roman','FontSize',11,'FontWeight','Normal', 'LineWidth', 1.5);
+grid on
+ 
+ 
+subplot(5,5,8)
+plot(Iteration(:,8), best_fx(:,8),'b')
+xlabel('Iterations')
+ylabel('Error')
+title('\it Trace 8')
+set(findobj(gcf,'type','axes'),'FontName','Times New Roman','FontSize',11,'FontWeight','Normal', 'LineWidth', 1.5);
+grid on
+ 
+ 
+subplot(5,5,9)
+plot(Iteration(:,9), best_fx(:,9),'b')
+xlabel('Iterations')
+ylabel('Error')
+title('\it Trace 9')
+set(findobj(gcf,'type','axes'),'FontName','Times New Roman','FontSize',11,'FontWeight','Normal', 'LineWidth', 1.5);
+grid on
+ 
+ 
+subplot(5,5,10)
+plot(Iteration(:,10), best_fx(:,10),'b')
+xlabel('Iterations')
+ylabel('Error')
+title('\it Trace 10')
+set(findobj(gcf,'type','axes'),'FontName','Times New Roman','FontSize',11,'FontWeight','Normal', 'LineWidth', 1.5);
+grid on
+ 
+ 
+subplot(5,5,11)
+plot(Iteration(:,11), best_fx(:,11),'b')
+xlabel('Iterations')
+ylabel('Error')
+title('\it Trace 11')
+set(findobj(gcf,'type','axes'),'FontName','Times New Roman','FontSize',11,'FontWeight','Normal', 'LineWidth', 1.5);
+grid on
+ 
+ 
+subplot(5,5,12)
+plot(Iteration(:,12), best_fx(:,12),'b')
+xlabel('Iterations')
+ylabel('Error')
+title('\it Trace 12')
+set(findobj(gcf,'type','axes'),'FontName','Times New Roman','FontSize',11,'FontWeight','Normal', 'LineWidth', 1.5);
+grid on
+ 
+ 
+subplot(5,5,13)
+plot(Iteration(:,13), best_fx(:,13),'b')
+xlabel('Iterations')
+ylabel('Error')
+title('\it Trace 13')
+set(findobj(gcf,'type','axes'),'FontName','Times New Roman','FontSize',11,'FontWeight','Normal', 'LineWidth', 1.5);
+grid on
+ 
+ 
+subplot(5,5,14)
+plot(Iteration(:,14), best_fx(:,14),'b')
+xlabel('Iterations')
+ylabel('Error')
+title('\it Trace 14')
+set(findobj(gcf,'type','axes'),'FontName','Times New Roman','FontSize',11,'FontWeight','Normal', 'LineWidth', 1.5);
+grid on
+ 
+ 
+subplot(5,5,15)
+plot(Iteration(:,15), best_fx(:,15),'b')
+xlabel('Iterations')
+ylabel('Error')
+title('\it Trace 15')
+set(findobj(gcf,'type','axes'),'FontName','Times New Roman','FontSize',11,'FontWeight','Normal', 'LineWidth', 1.5);
+grid on
+ 
+ 
+subplot(5,5,16)
+plot(Iteration(:,16), best_fx(:,16),'b')
+xlabel('Iterations')
+ylabel('Error')
+title('\it Trace 16')
+set(findobj(gcf,'type','axes'),'FontName','Times New Roman','FontSize',11,'FontWeight','Normal', 'LineWidth', 1.5);
+grid on
+ 
+ 
+subplot(5,5,17)
+plot(Iteration(:,27), best_fx(:,27),'b')
+xlabel('Iterations')
+ylabel('Error')
+title('\it Trace 17')
+set(findobj(gcf,'type','axes'),'FontName','Times New Roman','FontSize',11,'FontWeight','Normal', 'LineWidth', 1.5);
+grid on
+ 
+ 
+subplot(5,5,18)
+plot(Iteration(:,18), best_fx(:,18),'b')
+xlabel('Iterations')
+ylabel('Error')
+title('\it Trace 18')
+set(findobj(gcf,'type','axes'),'FontName','Times New Roman','FontSize',11,'FontWeight','Normal', 'LineWidth', 1.5);
+grid on
+ 
+ 
+subplot(5,5,19)
+plot(Iteration(:,19), best_fx(:,19),'b')
+xlabel('Iterations')
+ylabel('Error')
+title('\it Trace 19')
+set(findobj(gcf,'type','axes'),'FontName','Times New Roman','FontSize',11,'FontWeight','Normal', 'LineWidth', 1.5);
+grid on
+ 
+ 
+subplot(5,5,20)
+plot(Iteration(:,20), best_fx(:,20),'b')
+xlabel('Iterations')
+ylabel('Error')
+title('\it Trace 20')
+set(findobj(gcf,'type','axes'),'FontName','Times New Roman','FontSize',11,'FontWeight','Normal', 'LineWidth', 1.5);
+grid on
+ 
+ 
+subplot(5,5,21)
+plot(Iteration(:,21), best_fx(:,21),'b')
+xlabel('Iterations')
+ylabel('Error')
+title('\it Trace 21')
+set(findobj(gcf,'type','axes'),'FontName','Times New Roman','FontSize',11,'FontWeight','Normal', 'LineWidth', 1.5);
+grid on
+ 
+ 
+subplot(5,5,22)
+plot(Iteration(:,22), best_fx(:,22),'b')
+xlabel('Iterations')
+ylabel('Error')
+title('\it Trace 22')
+set(findobj(gcf,'type','axes'),'FontName','Times New Roman','FontSize',11,'FontWeight','Normal', 'LineWidth', 1.5);
+grid on
+ 
+ 
+subplot(5,5,23)
+plot(Iteration(:,23), best_fx(:,23),'b')
+xlabel('Iterations')
+ylabel('Error')
+title('\it Trace 23')
+set(findobj(gcf,'type','axes'),'FontName','Times New Roman','FontSize',11,'FontWeight','Normal', 'LineWidth', 1.5);
+grid on
+ 
+ 
+subplot(5,5,24)
+plot(Iteration(:,24), best_fx(:,24),'b')
+xlabel('Iterations')
+ylabel('Error')
+title('\it Trace 24')
+set(findobj(gcf,'type','axes'),'FontName','Times New Roman','FontSize',11,'FontWeight','Normal', 'LineWidth', 1.5);
+grid on
+ 
+ 
+subplot(5,5,25)
+plot(Iteration(:,25), best_fx(:,25),'b')
+xlabel('Iterations')
+ylabel('Error')
+title('\it Trace 25')
+text(min(xlim)+1000, max(ylim)-0.008, sprintf('Trace 25'),'FontSize',11)
+set(findobj(gcf,'type','axes'),'FontName','Times New Roman','FontSize',11,'FontWeight','Normal', 'LineWidth', 1.5);
+grid on
+ 
+Error plot mean f(x) with multiple subplots for trace 1-24
+figure;
+subplot(5,5,1)
+plot(Iteration(:,1), mean_fx(:,1),'b')
+xlabel('Iterations')
+ylabel('Error')
+title('\it Trace 1')
+set(findobj(gcf,'type','axes'),'FontName','Times New Roman','FontSize',11,'FontWeight','Normal', 'LineWidth', 1.5);
+grid on
+ 
+subplot(5,5,2)
+plot(Iteration(:,2), mean_fx(:,2),'b')
+xlabel('Iterations')
+ylabel('Error')
+title('\it Trace 2')
+set(findobj(gcf,'type','axes'),'FontName','Times New Roman','FontSize',11,'FontWeight','Normal', 'LineWidth', 1.5);
+grid on
+ 
+ 
+subplot(5,5,3)
+plot(Iteration(:,3), mean_fx(:,3),'b')
+xlabel('Iterations')
+ylabel('Error')
+title('\it Trace 3')
+set(findobj(gcf,'type','axes'),'FontName','Times New Roman','FontSize',11,'FontWeight','Normal', 'LineWidth', 1.5);
+grid on
+ 
+ 
+subplot(5,5,4)
+plot(Iteration(:,4), mean_fx(:,4),'b')
+xlabel('Iterations')
+ylabel('Error')
+title('\it Trace 4')
+set(findobj(gcf,'type','axes'),'FontName','Times New Roman','FontSize',11,'FontWeight','Normal', 'LineWidth', 1.5);
+grid on
+ 
+ 
+subplot(5,5,5)
+plot(Iteration(:,5), mean_fx(:,5),'b')
+xlabel('Iterations')
+ylabel('Error')
+title('\it Trace 5')
+set(findobj(gcf,'type','axes'),'FontName','Times New Roman','FontSize',11,'FontWeight','Normal', 'LineWidth', 1.5);
+grid on
+ 
+ 
+subplot(5,5,6)
+plot(Iteration(:,6), mean_fx(:,6),'b')
+xlabel('Iterations')
+ylabel('Error')
+title('\it Trace 6')
+set(findobj(gcf,'type','axes'),'FontName','Times New Roman','FontSize',11,'FontWeight','Normal', 'LineWidth', 1.5);
+grid on
+ 
+ 
+subplot(5,5,7)
+plot(Iteration(:,26), mean_fx(:,26),'b')
+xlabel('Iterations')
+ylabel('Error')
+title('\it Trace 7')
+set(findobj(gcf,'type','axes'),'FontName','Times New Roman','FontSize',11,'FontWeight','Normal', 'LineWidth', 1.5);
+grid on
+ 
+ 
+subplot(5,5,8)
+plot(Iteration(:,8), mean_fx(:,8),'b')
+xlabel('Iterations')
+ylabel('Error')
+title('\it Trace 8')
+set(findobj(gcf,'type','axes'),'FontName','Times New Roman','FontSize',11,'FontWeight','Normal', 'LineWidth', 1.5);
+grid on
+ 
+ 
+subplot(5,5,9)
+plot(Iteration(:,9), mean_fx(:,9),'b')
+xlabel('Iterations')
+ylabel('Error')
+title('\it Trace 9')
+set(findobj(gcf,'type','axes'),'FontName','Times New Roman','FontSize',11,'FontWeight','Normal', 'LineWidth', 1.5);
+grid on
+ 
+ 
+subplot(5,5,10)
+plot(Iteration(:,10), mean_fx(:,10),'b')
+xlabel('Iterations')
+ylabel('Error')
+title('\it Trace 10')
+set(findobj(gcf,'type','axes'),'FontName','Times New Roman','FontSize',11,'FontWeight','Normal', 'LineWidth', 1.5);
+grid on
+ 
+ 
+subplot(5,5,11)
+plot(Iteration(:,11), mean_fx(:,11),'b')
+xlabel('Iterations')
+ylabel('Error')
+title('\it Trace 11')
+set(findobj(gcf,'type','axes'),'FontName','Times New Roman','FontSize',11,'FontWeight','Normal', 'LineWidth', 1.5);
+grid on
+ 
+ 
+subplot(5,5,12)
+plot(Iteration(:,12), mean_fx(:,12),'b')
+xlabel('Iterations')
+ylabel('Error')
+title('\it Trace 12')
+set(findobj(gcf,'type','axes'),'FontName','Times New Roman','FontSize',11,'FontWeight','Normal', 'LineWidth', 1.5);
+grid on
+ 
+ 
+subplot(5,5,13)
+plot(Iteration(:,13), mean_fx(:,13),'b')
+xlabel('Iterations')
+ylabel('Error')
+title('\it Trace 13')
+set(findobj(gcf,'type','axes'),'FontName','Times New Roman','FontSize',11,'FontWeight','Normal', 'LineWidth', 1.5);
+grid on
+ 
+ 
+subplot(5,5,14)
+plot(Iteration(:,14), mean_fx(:,14),'b')
+xlabel('Iterations')
+ylabel('Error')
+title('\it Trace 14')
+set(findobj(gcf,'type','axes'),'FontName','Times New Roman','FontSize',11,'FontWeight','Normal', 'LineWidth', 1.5);
+grid on
+ 
+ 
+subplot(5,5,15)
+plot(Iteration(:,15), mean_fx(:,15),'b')
+xlabel('Iterations')
+ylabel('Error')
+title('\it Trace 15')
+set(findobj(gcf,'type','axes'),'FontName','Times New Roman','FontSize',11,'FontWeight','Normal', 'LineWidth', 1.5);
+grid on
+ 
+ 
+subplot(5,5,16)
+plot(Iteration(:,16), mean_fx(:,16),'b')
+xlabel('Iterations')
+ylabel('Error')
+title('\it Trace 16')
+set(findobj(gcf,'type','axes'),'FontName','Times New Roman','FontSize',11,'FontWeight','Normal', 'LineWidth', 1.5);
+grid on
+ 
+ 
+subplot(5,5,17)
+plot(Iteration(:,27), mean_fx(:,27),'b')
+xlabel('Iterations')
+ylabel('Error')
+title('\it Trace 17')
+set(findobj(gcf,'type','axes'),'FontName','Times New Roman','FontSize',11,'FontWeight','Normal', 'LineWidth', 1.5);
+grid on
+ 
+ 
+subplot(5,5,18)
+plot(Iteration(:,18), mean_fx(:,18),'b')
+xlabel('Iterations')
+ylabel('Error')
+title('\it Trace 18')
+set(findobj(gcf,'type','axes'),'FontName','Times New Roman','FontSize',11,'FontWeight','Normal', 'LineWidth', 1.5);
+grid on
+ 
+ 
+subplot(5,5,19)
+plot(Iteration(:,19), mean_fx(:,19),'b')
+xlabel('Iterations')
+ylabel('Error')
+title('\it Trace 19')
+set(findobj(gcf,'type','axes'),'FontName','Times New Roman','FontSize',11,'FontWeight','Normal', 'LineWidth', 1.5);
+grid on
+ 
+ 
+subplot(5,5,20)
+plot(Iteration(:,20), mean_fx(:,20),'b')
+xlabel('Iterations')
+ylabel('Error')
+title('\it Trace 20')
+set(findobj(gcf,'type','axes'),'FontName','Times New Roman','FontSize',11,'FontWeight','Normal', 'LineWidth', 1.5);
+grid on
+ 
+ 
+subplot(5,5,21)
+plot(Iteration(:,21), mean_fx(:,21),'b')
+xlabel('Iterations')
+ylabel('Error')
+title('\it Trace 21')
+set(findobj(gcf,'type','axes'),'FontName','Times New Roman','FontSize',11,'FontWeight','Normal', 'LineWidth', 1.5);
+grid on
+ 
+ 
+subplot(5,5,22)
+plot(Iteration(:,22), mean_fx(:,22),'b')
+xlabel('Iterations')
+ylabel('Error')
+title('\it Trace 22')
+set(findobj(gcf,'type','axes'),'FontName','Times New Roman','FontSize',11,'FontWeight','Normal', 'LineWidth', 1.5);
+grid on
+ 
+ 
+subplot(5,5,23)
+plot(Iteration(:,23), mean_fx(:,23),'b')
+xlabel('Iterations')
+ylabel('Error')
+title('\it Trace 23')
+set(findobj(gcf,'type','axes'),'FontName','Times New Roman','FontSize',11,'FontWeight','Normal', 'LineWidth', 1.5);
+grid on
+ 
+ 
+subplot(5,5,24)
+plot(Iteration(:,24), mean_fx(:,24),'b')
+xlabel('Iterations')
+ylabel('Error')
+title('\it Trace 24')
+set(findobj(gcf,'type','axes'),'FontName','Times New Roman','FontSize',11,'FontWeight','Normal', 'LineWidth', 1.5);
+grid on
+ 
+ 
+subplot(5,5,25)
+plot(Iteration(:,25), mean_fx(:,25),'b')
+xlabel('Iterations')
+ylabel('Error')
+title('\it Trace 25')
+text(min(xlim)+1000, max(ylim)-0.008, sprintf('Trace 25'),'FontSize',11)
+set(findobj(gcf,'type','axes'),'FontName','Times New Roman','FontSize',11,'FontWeight','Normal', 'LineWidth', 1.5);
+grid on
+ 
+ 
+%% Time comparison
+subplot(1,2,1)
+Time_comparison = [148.56  117.12 266.76];
+AAAA = [1 2 3];
+bar(AAAA, Time_comparison)
+set(gca, 'XTick', [1 2 3])
+set(gca, 'XTickLabel', {'GA' 'PS' 'Hybrid'})
+ylabel('Time (s)')
+title('Time comparison for composite trace')
+set(findobj(gcf,'type','axes'),'FontName','Times New Roman','FontSize',11,'FontWeight','Normal', 'LineWidth', 0.80);
+%
+subplot(1,2,2)
+Time_comparison = [489291.84  352434.24 819415.44];
+bar(AAAA, Time_comparison)
+ylabel('Time (s)')
+set(gca, 'XTick', [1 2 3])
+set(gca, 'XTickLabel', {'GA' 'PS' 'Hybrid'})
+%xticklabels({'GA','PA','Hybrid'})
+title('Time comparison for entire trace')
+set(findobj(gcf,'type','axes'),'FontName','Times New Roman','FontSize',11,'FontWeight','Normal', 'LineWidth', 0.80);
+%
+ 
+
